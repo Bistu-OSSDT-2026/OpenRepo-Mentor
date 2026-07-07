@@ -1,5 +1,7 @@
 ﻿import type { IssueAnalysis, ScanResult } from '../types/index.js';
 import { renderIssuePrompt } from '../llm/prompts/issue.js';
+import { createLLMClient } from '../llm/client.js';
+import { loadConfig } from '../config/loader.js';
 import { OrmError, ErrorCodes } from '../shared/errors.js';
 
 export interface AnalyzeIssueOptions {
@@ -18,10 +20,10 @@ export async function analyzeIssue(
     return mockAnalyzeIssue(issueContent, scanResult, prompt.user);
   }
 
-  throw new OrmError(
-    'Real LLM client is not available yet. Please use --mock-llm until task 5 is merged.',
-    ErrorCodes.LLM_CALL_FAILED
-  );
+  const config = await loadConfig({ configPath: options.configPath });
+  const client = createLLMClient(config);
+  const raw = await client.complete(prompt);
+  return parseIssueAnalysis(raw);
 }
 
 export function parseIssueAnalysis(raw: string): IssueAnalysis {
