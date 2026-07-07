@@ -2,6 +2,8 @@
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { issueAnalyzeCommand } from './commands/issue.js';
+import { planCommand } from './commands/plan.js';
+import { reportCommand } from './commands/report.js';
 import { scanCommand } from './commands/scan.js';
 
 const program = new Command('orm')
@@ -42,23 +44,34 @@ issueCommand
 program
   .command('plan')
   .description('Generate a contribution plan')
-  .action(async () => {
-    console.log('plan');
-  });
+  .option('--config <path>', 'Path to config file')
+  .option('--verbose', 'Print verbose logs')
+  .option('--mock-llm', 'Use mock LLM responses')
+  .action(
+    async (options: { config?: string; verbose?: boolean; mockLlm?: boolean }) => {
+      await planCommand(options);
+    }
+  );
 
 program
   .command('report')
   .description('Generate the final practice report')
+  .option('--config <path>', 'Path to config file')
+  .option('--verbose', 'Print verbose logs')
+  .option('--mock-llm', 'Use mock LLM responses')
   .option('--site', 'Build static site after report')
-  .action(async (options: { site?: boolean }) => {
-    console.log('report');
-
-    if (options.site) {
-      const { buildSite } = await import('../site/build-site.js');
-      await buildSite();
-      console.log('Static site built in site/');
+  .option('--members <names>', 'Comma-separated team member names')
+  .action(
+    async (options: {
+      config?: string;
+      verbose?: boolean;
+      mockLlm?: boolean;
+      site?: boolean;
+      members?: string;
+    }) => {
+      await reportCommand(options);
     }
-  });
+  );
 
 const currentFile = fileURLToPath(import.meta.url);
 if (process.argv[1] && currentFile === resolve(process.argv[1])) {
