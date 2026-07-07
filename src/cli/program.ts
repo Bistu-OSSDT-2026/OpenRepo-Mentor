@@ -29,8 +29,15 @@ program
 program
   .command('report')
   .description('Generate the final practice report')
-  .action(async () => {
+  .option('--site', 'Build static site after report')
+  .action(async (options: { site?: boolean }) => {
     console.log('report');
+
+    if (options.site) {
+      const { buildSite } = await import('../site/build-site.js');
+      await buildSite();
+      console.log('Static site built in site/');
+    }
   });
 
 export { program };
