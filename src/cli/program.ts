@@ -2,6 +2,7 @@
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { issueAnalyzeCommand } from './commands/issue.js';
+import { scanCommand } from './commands/scan.js';
 
 const program = new Command('orm')
   .description('OpenRepo Mentor: a CLI for student open-source practice')
@@ -10,9 +11,16 @@ const program = new Command('orm')
 program
   .command('scan <repo-path>')
   .description('Scan a local repository and generate an overview')
-  .action(async (repoPath: string) => {
-    console.log(`scan: ${repoPath}`);
-  });
+  .option('--config <path>', 'Path to config file')
+  .option('--verbose', 'Print verbose logs')
+  .action(
+    async (
+      repoPath: string,
+      options: { config?: string; verbose?: boolean },
+    ) => {
+      await scanCommand(repoPath, options);
+    },
+  );
 
 const issueCommand = program.command('issue').description('Issue commands');
 
