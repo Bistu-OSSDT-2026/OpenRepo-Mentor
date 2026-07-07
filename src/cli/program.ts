@@ -1,4 +1,7 @@
-import { Command } from 'commander';
+﻿import { Command } from 'commander';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { issueAnalyzeCommand } from './commands/issue.js';
 
 const program = new Command('orm')
   .description('OpenRepo Mentor: a CLI for student open-source practice')
@@ -11,13 +14,22 @@ program
     console.log(`scan: ${repoPath}`);
   });
 
-program
-  .command('issue')
+const issueCommand = program.command('issue').description('Issue commands');
+
+issueCommand
   .command('analyze <issue-file>')
   .description('Analyze a local issue file')
-  .action(async (issueFile: string) => {
-    console.log(`issue analyze: ${issueFile}`);
-  });
+  .option('--config <path>', 'Path to config file')
+  .option('--verbose', 'Print verbose logs')
+  .option('--mock-llm', 'Use mock LLM responses')
+  .action(
+    async (
+      issueFile: string,
+      options: { config?: string; verbose?: boolean; mockLlm?: boolean }
+    ) => {
+      await issueAnalyzeCommand(issueFile, options);
+    }
+  );
 
 program
   .command('plan')
@@ -39,5 +51,10 @@ program
       console.log('Static site built in site/');
     }
   });
+
+const currentFile = fileURLToPath(import.meta.url);
+if (process.argv[1] && currentFile === resolve(process.argv[1])) {
+  await program.parseAsync(process.argv);
+}
 
 export { program };
