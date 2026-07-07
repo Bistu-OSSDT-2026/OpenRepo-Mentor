@@ -1,10 +1,4 @@
 import { Command } from 'commander';
-import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { scanCommand } from './commands/scan.js';
-import { issueAnalyzeCommand } from './commands/issue.js';
-import { planCommand } from './commands/plan.js';
-import { reportCommand } from './commands/report.js';
 
 const program = new Command('orm')
   .description('OpenRepo Mentor: a CLI for student open-source practice')
@@ -13,50 +7,37 @@ const program = new Command('orm')
 program
   .command('scan <repo-path>')
   .description('Scan a local repository and generate an overview')
-  .option('--config <path>', 'Path to config file')
-  .option('--verbose', 'Print verbose logs')
-  .option('--mock-llm', 'Use mock LLM responses')
-  .action(async (repoPath: string, options: { config?: string; verbose?: boolean; mockLlm?: boolean }) => {
-    await scanCommand(repoPath, options);
+  .action(async (repoPath: string) => {
+    console.log(`scan: ${repoPath}`);
   });
 
-const issueCommand = program.command('issue').description('Issue commands');
-
-issueCommand
+program
+  .command('issue')
   .command('analyze <issue-file>')
   .description('Analyze a local issue file')
-  .option('--config <path>', 'Path to config file')
-  .option('--verbose', 'Print verbose logs')
-  .option('--mock-llm', 'Use mock LLM responses')
-  .action(async (issueFile: string, options: { config?: string; verbose?: boolean; mockLlm?: boolean }) => {
-    await issueAnalyzeCommand(issueFile, options);
+  .action(async (issueFile: string) => {
+    console.log(`issue analyze: ${issueFile}`);
   });
 
 program
   .command('plan')
   .description('Generate a contribution plan')
-  .option('--config <path>', 'Path to config file')
-  .option('--verbose', 'Print verbose logs')
-  .option('--mock-llm', 'Use mock LLM responses')
-  .action(async (options: { config?: string; verbose?: boolean; mockLlm?: boolean }) => {
-    await planCommand(options);
+  .action(async () => {
+    console.log('plan');
   });
 
 program
   .command('report')
   .description('Generate the final practice report')
-  .option('--config <path>', 'Path to config file')
-  .option('--verbose', 'Print verbose logs')
-  .option('--mock-llm', 'Use mock LLM responses')
   .option('--site', 'Build static site after report')
-  .option('--members <names>', 'Comma-separated team member names')
-  .action(async (options: { config?: string; verbose?: boolean; mockLlm?: boolean; site?: boolean; members?: string }) => {
-    await reportCommand(options);
-  });
+  .action(async (options: { site?: boolean }) => {
+    console.log('report');
 
-const currentFile = fileURLToPath(import.meta.url);
-if (process.argv[1] && currentFile === resolve(process.argv[1])) {
-  await program.parseAsync(process.argv);
-}
+    if (options.site) {
+      const { buildSite } = await import('../site/build-site.js');
+      await buildSite();
+      console.log('Static site built in site/');
+    }
+  });
 
 export { program };
