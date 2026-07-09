@@ -61,14 +61,37 @@ function mockAnalyzeIssue(
 }
 
 function normalizeIssueAnalysis(parsed: any): IssueAnalysis {
+  const rawType = typeof parsed.type === 'string' ? parsed.type.toLowerCase() : '';
+  const rawDifficulty = typeof parsed.difficulty === 'string' ? parsed.difficulty.toLowerCase() : '';
+
   return {
     summary: String(parsed.summary ?? ''),
-    type: isIssueType(parsed.type) ? parsed.type : 'question',
-    difficulty: isDifficulty(parsed.difficulty) ? parsed.difficulty : 'medium',
-    relatedFiles: Array.isArray(parsed.relatedFiles) ? parsed.relatedFiles.map(String) : [],
-    suggestedSteps: Array.isArray(parsed.suggestedSteps) ? parsed.suggestedSteps.map(String) : [],
-    risks: Array.isArray(parsed.risks) ? parsed.risks.map(String) : [],
+    type: isIssueType(rawType) ? rawType : 'question',
+    difficulty: isDifficulty(rawDifficulty) ? rawDifficulty : 'medium',
+    relatedFiles: normalizeStringArray(parsed.relatedFiles, (s) => s.replace(/\/\/.*$/, '').trim()),
+    suggestedSteps: normalizeStringArray(parsed.suggestedSteps),
+    risks: normalizeStringArray(parsed.risks),
   };
+}
+
+function normalizeStringArray(value: unknown, transform?: (s: string) => string): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => {
+      if (typeof item === 'string') {
+        return transform ? transform(item) : item;
+      }
+      if (item && typeof item === 'object') {
+        const obj = item as Record<string, unknown>;
+        const text = obj.step ?? obj.risk ?? obj.description ?? obj.text ?? '';
+        return String(text);
+      }
+      return String(item);
+    })
+    .filter(Boolean);
 }
 
 function buildSummary(issueContent: string): string {
